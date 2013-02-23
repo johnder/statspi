@@ -16,8 +16,8 @@ import urllib2
 import urllib3
 
 PATH = '/render/?'
-DEFAULT_FG = '#f0f0f0'
-DEFAULT_BG = '#333'
+DEFAULT_FG = '#333333'
+DEFAULT_BG = '#f0f0f0'
 PADDING = 1
 
 connpool = urllib3.PoolManager(10, timeout=10, maxsize=3, block=True)
@@ -25,8 +25,6 @@ connpool = urllib3.PoolManager(10, timeout=10, maxsize=3, block=True)
 CONFIG = {}
 
 class Graph(gtk.Image):
-	# All graphs have the same width/height, so these
-	# should only be updated at a class level
 	width = 300
 	height = 200
 	
@@ -45,10 +43,10 @@ class Graph(gtk.Image):
 	def _get_url(self):
 		qs = [
 			'_salt=%d' % time.time(),
-			'bgcolor=%s' % urllib.quote_plus(CONFIG['colors'].get('bg', DEFAULT_BG)),
-			'fgcolor=%s' % urllib.quote_plus(CONFIG['colors'].get('fg', DEFAULT_FG)),
-			'height=%d' % Graph.height,
-			'width=%d' % Graph.width,
+			'bgcolor=%s' % urllib.quote_plus(CONFIG.get('colors', {}).get('bg', DEFAULT_BG)),
+			'fgcolor=%s' % urllib.quote_plus(CONFIG.get('colors', {}).get('fg', DEFAULT_FG)),
+			'height=%d' % self.height,
+			'width=%d' % self.width,
 		]
 		
 		for k, v in self.params.iteritems():
@@ -58,28 +56,39 @@ class Graph(gtk.Image):
 			else:
 				qs.append('%s=%s' % (k, urllib.quote_plus(str(v))))
 		
-		return 'http://' + CONFIG['graphiteWebRoot'] + PATH + '&'.join(qs)
+		return CONFIG['graphiteWebRoot'] + PATH + '&'.join(qs)
 	
-	def _draw(self):
-		self.set_from_pixbuf(self.pixbuf.scale_simple(Graph.width, Graph.height, gtk.gdk.INTERP_BILINEAR))
+	def _draw(self, img_data=None, saturated=False):
+		if img_data:
+			self.saturated = saturated
+			pixbuf_loader = gtk.gdk.PixbufLoader()
+			pixbuf_loader.write(img_data)
+			self.pixbuf = pixbuf_loader.get_pixbuf()
+			pixbuf_loader.close()
+		
+		b = self.pixbuf.scale_simple(self.width, self.height, gtk.gdk.INTERP_BILINEAR)
+		
+		self.set_from_pixbuf(b)
 		self.queue_draw()
+	
+	def _draw_outdated(self):
+		if not self.pixbuf:
+			return
+		
+		if not self.saturated:
+			self.saturated = True
+			self.pixbuf.saturate_and_pixelate(self.pixbuf, 0, False)
+		
+		self._draw()
 	
 	def _reload(self):
 		while True:
 			try:
-				pixbuf_loader = None
 				r = connpool.request('GET', self._get_url(), retries=1)
-				
-				pixbuf_loader = gtk.gdk.PixbufLoader()
-				pixbuf_loader.write(r.data)
-				self.pixbuf = pixbuf_loader.get_pixbuf()
-				
-				gobject.idle_add(self._draw)
+				gobject.idle_add(self._draw, r.data)
 			except Exception as e:
+				gobject.idle_add(self._draw_outdated)
 				traceback.print_exc()
-			finally:
-				if pixbuf_loader:
-					pixbuf_loader.close()
 			
 			for _ in range(CONFIG.get('graphUpdateInterval', 10)):
 				if self._stop:
@@ -87,19 +96,19 @@ class Graph(gtk.Image):
 				time.sleep(1)
 	
 	def scale_from_window(self, window, rect, rows, cols):
-		if self.pixbuf == None:
+		if not self.pixbuf:
 			return
 		
 		width = (rect.width / cols) - 5
 		height = (rect.height / rows) - 5
 		
 		if width != self.width or height != self.height:
-			Graph.width = width
-			Graph.height = height
+			self.width = width
+			self.height = height
 			self._draw()
 
 class StatsPi(object):
-	# If the update thread should stop running
+	# If the config update thread should stop running
 	_stop = False
 	
 	# The graphs that we're currently tracking
@@ -109,14 +118,19 @@ class StatsPi(object):
 		self.win = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.win.connect('destroy', self.destroy)
 		
-		self._update_config()
+		self.win.set_title('StatsPi')
+		
+		if not DEBUG:
+			self.win.fullscreen()
 		
 		self.win.show_all()
-		self.win.fullscreen()
 		
 		threading.Thread(target=self._update_graphs).start()
 	
-	def _clear(self):
+	def _reset(self):
+		color = gtk.gdk.color_parse(CONFIG.get('colors', {}).get('bg', DEFAULT_BG))
+		self.win.modify_bg(gtk.STATE_NORMAL, color)
+		
 		for c in self.win.get_children():
 			# All of the children of table are cleared and stopped from table's "destroy" event
 			self.win.remove(c)
@@ -130,13 +144,13 @@ class StatsPi(object):
 			hosts = [h.lower() for h in CONFIG['hosts']]
 			
 			if hostname not in hosts:
-				gobject.idle_add(self._display_host_error, hostname)
 				self.graphs = []
+				gobject.idle_add(self._display_host_error, hostname)
 			else:
 				graphs = self._get_host_graphs(hostname)
 				if self._should_update(graphs):
-					gobject.idle_add(self._display_graphs, graphs)
 					self.graphs = graphs
+					gobject.idle_add(self._display_graphs, graphs)
 			
 			for _ in range(CONFIG.get('configUpdateInterval', 60)):
 				if self._stop:
@@ -155,7 +169,7 @@ class StatsPi(object):
 		return False
 	
 	def _display_host_error(self, hostname):
-		self._clear()
+		self._reset()
 		
 		buff = gtk.TextBuffer()
 		buff.set_text('Error\nHost "%s" not found in config' % hostname)
@@ -175,11 +189,12 @@ class StatsPi(object):
 	def _update_config(self):
 		while True:
 			try:
-				CONFIG.clear()
-				CONFIG.update(json.load(urllib2.urlopen(CONFIG_URL, timeout=5)))
+				# Avoid a race condition by finishing the request before updating the config
 				
-				color = gtk.gdk.color_parse(CONFIG['colors'].get('bg', DEFAULT_BG))
-				self.win.modify_bg(gtk.STATE_NORMAL, color)
+				cfg = json.load(urllib2.urlopen(CONFIG_URL, timeout=5))
+				
+				CONFIG.clear()
+				CONFIG.update(cfg)
 				
 				return
 			except Exception as e:
@@ -187,7 +202,7 @@ class StatsPi(object):
 				time.sleep(5)
 	
 	def _display_graphs(self, graphs):
-		self._clear()
+		self._reset()
 		
 		dim = 0
 		graphs_len = len(graphs)
@@ -205,7 +220,7 @@ class StatsPi(object):
 		col = 0
 		for graph in graphs:
 			g = Graph(graph)
-			self.table.attach(g, row, row + 1, col, col + 1, gtk.FILL|gtk.EXPAND, gtk.FILL|gtk.EXPAND, 0, 0)
+			self.table.attach(g, row, row + 1, col, col + 1, gtk.FILL|gtk.EXPAND, gtk.FILL|gtk.EXPAND)
 			self.win.connect('size-allocate', g.scale_from_window, rows, cols)
 			self.table.connect('destroy', g.stop)
 			row += 1
@@ -218,7 +233,7 @@ class StatsPi(object):
 		self.win.show_all()
 	
 	def _get_host_graphs(self, hostname):
-		""" Loads the graph config, decides which graphs are meant for us, and queues them for display.
+		""" Loads the graph config and decides which graphs are meant for us.
 		"""
 		
 		def prepare_graph(suite, graph):
@@ -265,4 +280,5 @@ if __name__ == "__main__":
 		sys.exit(1)
 	
 	CONFIG_URL = sys.argv[1]
+	DEBUG = 'localhost' in CONFIG_URL
 	StatsPi().main()
