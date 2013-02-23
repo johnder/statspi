@@ -43,8 +43,7 @@ class Graph(gtk.Image):
 	def _get_url(self):
 		qs = [
 			'_salt=%d' % time.time(),
-			'bgcolor=%s' % urllib.quote_plus(CONFIG.get('colors', {}).get('bg', DEFAULT_BG)),
-			'fgcolor=%s' % urllib.quote_plus(CONFIG.get('colors', {}).get('fg', DEFAULT_FG)),
+			'bgcolor=%s' % urllib.quote_plus(CONFIG.get('bgcolor', DEFAULT_BG)),
 			'height=%d' % self.height,
 			'width=%d' % self.width,
 		]
@@ -128,7 +127,7 @@ class StatsPi(object):
 		threading.Thread(target=self._update_graphs).start()
 	
 	def _reset(self):
-		color = gtk.gdk.color_parse(CONFIG.get('colors', {}).get('bg', DEFAULT_BG))
+		color = gtk.gdk.color_parse(CONFIG.get('bgcolor', DEFAULT_BG))
 		self.win.modify_bg(gtk.STATE_NORMAL, color)
 		
 		for c in self.win.get_children():
