@@ -250,7 +250,7 @@ class StatsPi(object):
 		# Graphs should be divided equally amongst all hosts
 		hosts = CONFIG['hosts']
 		host_len = len(hosts)
-		per_host = len(host_graphs) / host_len
+		per_host = int(math.ceil(len(host_graphs) / float(host_len)))
 		
 		# The total number of graphs that will be displayed with this split
 		displayed = per_host * host_len
