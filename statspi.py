@@ -16,8 +16,8 @@ import urllib2
 import urllib3
 
 PATH = '/render/?'
-DEFAULT_FG = '#333333'
-DEFAULT_BG = '#f0f0f0'
+DEFAULT_FG = '#f0f0f0'
+DEFAULT_BG = '#333333'
 PADDING = 1
 
 connpool = urllib3.PoolManager(10, timeout=10, maxsize=3, block=True)
@@ -189,7 +189,6 @@ class StatsPi(object):
 		while True:
 			try:
 				# Avoid a race condition by finishing the request before updating the config
-				
 				cfg = json.load(urllib2.urlopen(CONFIG_URL, timeout=5))
 				
 				CONFIG.clear()

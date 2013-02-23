@@ -24,7 +24,7 @@ When we first started out, we were running Chrome, which displayed a single page
 	sudo aptitude install python-gtk2 python-urllib3 x11-utils
 	```
 
-3. Download the [stats.py](stats.py) file.
+3. Download the [statspi.py](statspi.py) file.
 4. Set the Pi's hostname to something unique on your network and add that name to your config.  For ours, they're simply: pi0 .. piN
 5. Go setup your [configuration (see the Config section)](#the-config).
 6. Disable the Pi's default screensaver, create and chmod u+x this script in ~/bin/disable_screensaver
