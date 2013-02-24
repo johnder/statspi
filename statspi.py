@@ -85,7 +85,7 @@ class Graph(gtk.Image):
 			try:
 				r = connpool.request('GET', self._get_url(), retries=1)
 				gobject.idle_add(self._draw, r.data)
-			except Exception as e:
+			except:
 				gobject.idle_add(self._draw_outdated)
 				traceback.print_exc()
 			
@@ -195,7 +195,7 @@ class StatsPi(object):
 				CONFIG.update(cfg)
 				
 				return
-			except Exception as e:
+			except:
 				traceback.print_exc()
 				time.sleep(5)
 	
