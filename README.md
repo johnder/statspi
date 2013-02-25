@@ -18,16 +18,18 @@ When we first started out, we were running Chrome, which displayed a single page
 ## The Setup
 
 1. Go through your normal routine of getting ONE of your [sdcards for you Pis all setup](http://elinux.org/RPi_Easy_SD_Card_Setup).  Go ahead, I'll wait
-2. Mount that sdcard in a Pi, connect to a network, and install: 
+2. Mount that sdcard in a Pi, connect to a network, and run:
 
 	```bash
-	sudo aptitude install python-gtk2 python-urllib3 x11-utils
+	sudo aptitude install python-gtk2 x11-utils git
+	git clone git://github.com/iheartradio/statspi.git
+	cd statspi
+	sudo pip install -e git://github.com/shazow/urllib3.git#egg=urllib3
 	```
 
-3. Download the [statspi.py](statspi.py) file.
-4. Set the Pi's hostname to something unique on your network and add that name to your config.  For ours, they're simply: pi0 .. piN
-5. Go setup your [configuration (see the Config section)](#the-config).
-6. Disable the Pi's default screensaver, create and chmod u+x this script in ~/bin/disable_screensaver
+3. Set the Pi's hostname to something unique on your network and add that name to your config.  For ours, they're simply: pi0 .. piN
+4. Go setup your [configuration (see the Config section)](#the-config).
+5. Disable the Pi's default screensaver, create and chmod u+x this script in ~/bin/disable_screensaver
 
 	```bash
 	#!/bin/bash
@@ -37,28 +39,28 @@ When we first started out, we were running Chrome, which displayed a single page
 	xset s noblank
 	```
 
-7. Make the application start on boot by adding/creating: ~/.config/lxsession/LXDE/autostart
+6. Make the application start on boot by adding/creating: ~/.config/lxsession/LXDE/autostart
 
 	```
 	/home/pi/bin/disable_screensaver
 	@python /home/pi/statspi/statspi.py http://URL.COM/TO/YOUR/config.json
 	```
 
-8. Reboot and test to make sure it all works.
-9. Plop that sdcard back into a computer and make a copy of it:
+7. Reboot and test to make sure it all works.
+8. Plop that sdcard back into a computer and make a copy of it:
 
 	```bash
 	sudo dd if=/dev/<SDCARD> bs=4M | bzip2 > statspi.img.bz2
 	```
 
-10. Create images for the rest of your sdcards.
+9. Create images for the rest of your sdcards.
 
 	```bash
 	bzcat statspi.img.bz2 | sudo dd of=/dev/<SDCARD> bs=4M
 	```
 
-11. Mount the sdcard, change the pi's hostname in /etc/hostname to something unique and add that name to your config.
-12. Rinse and repeat.
+10. Mount the sdcard, change the pi's hostname in /etc/hostname to something unique and add that name to your config.
+11. Rinse and repeat.
 
 ## The Config
 
