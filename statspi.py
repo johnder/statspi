@@ -124,6 +124,12 @@ class StatsPi(object):
 		
 		self.win.show_all()
 		
+		if not DEBUG:
+			pixmap = gtk.gdk.Pixmap(None, 1, 1, 1)
+			color = gtk.gdk.Color()
+			cursor = gtk.gdk.Cursor(pixmap, pixmap, color, color, 0, 0)
+			self.win.window.set_cursor(cursor)
+		
 		threading.Thread(target=self._update_graphs).start()
 	
 	def _reset(self):
