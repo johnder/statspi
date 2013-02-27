@@ -9,16 +9,16 @@ When we first started out, we were running Chrome, which displayed a single page
 ## The Parts
 
 1. 1 TV with a USB port that provides power (preferably 1080p with a 1x1 pixel mode for HDMI in (aka. no overscan)) per Pi
-2. 1 [hdmi cable](http://www.amazon.com/dp/B00870ZHCQ) per Pi
-3. 1 [micro usb cable](http://www.amazon.com/dp/B003ES5ZSW) per Pi
-4. 1 [sdcard](http://www.amazon.com/dp/B003VNKNEG) per Pi
-5. 1 [usb wifi dongle](http://www.amazon.com/dp/B005CLMJLU) per Pi, if you wish to use wifi
-5. 1 [case](http://www.adafruit.com/products/1140) per Pi
+1. 1 [hdmi cable](http://www.amazon.com/dp/B00870ZHCQ) per Pi
+1. 1 [micro usb cable](http://www.amazon.com/dp/B003ES5ZSW) per Pi
+1. 1 [sdcard](http://www.amazon.com/dp/B003VNKNEG) per Pi
+1. 1 [usb wifi dongle](http://www.amazon.com/dp/B005CLMJLU) per Pi, if you wish to use wifi
+1. 1 [case](http://www.adafruit.com/products/1140) per Pi
 
 ## The Setup
 
 1. Go through your normal routine of getting ONE of your [sdcards for you Pis all setup](http://elinux.org/RPi_Easy_SD_Card_Setup).  Go ahead, I'll wait
-2. Mount that sdcard in a Pi, connect to a network, and run:
+1. Mount that sdcard in a Pi, connect to a network, and run:
 
 	```bash
 	sudo aptitude install python-gtk2 x11-utils git
@@ -27,9 +27,9 @@ When we first started out, we were running Chrome, which displayed a single page
 	sudo pip install -e git://github.com/shazow/urllib3.git#egg=urllib3
 	```
 
-3. Set the Pi's hostname to something unique on your network and add that name to your config.  For ours, they're simply: pi0 .. piN
-4. Go setup your [configuration (see the Config section)](#the-config).
-5. Disable the Pi's default screensaver, create and chmod u+x this script in ~/bin/disable_screensaver
+1. Set the Pi's hostname to something unique on your network and add that name to your config.  For ours, they're simply: pi0 .. piN
+1. Go setup your [configuration (see the Config section)](#the-config).
+1. Disable the Pi's default screensaver, create and chmod u+x this script in ~/bin/disable_screensaver
 
 	```bash
 	#!/bin/bash
@@ -39,28 +39,53 @@ When we first started out, we were running Chrome, which displayed a single page
 	xset s noblank
 	```
 
-6. Make the application start on boot by adding/creating: ~/.config/lxsession/LXDE/autostart
+1. Make the application start on boot by adding/creating: ~/.config/lxsession/LXDE/autostart
 
 	```
 	/home/pi/bin/disable_screensaver
 	@python /home/pi/statspi/statspi.py http://URL.COM/TO/YOUR/config.json
 	```
 
-7. Reboot and test to make sure it all works.
-8. Plop that sdcard back into a computer and make a copy of it:
+1. If you're using WiFi, you're going to want to make it [reconnect on drop](#wifi-reconnect).
+1. Reboot and test to make sure it all works.
+1. Plop that sdcard back into a computer and make a copy of it:
 
 	```bash
 	sudo dd if=/dev/<SDCARD> bs=4M | bzip2 > statspi.img.bz2
 	```
 
-9. Create images for the rest of your sdcards.
+1. Create images for the rest of your sdcards.
 
 	```bash
 	bzcat statspi.img.bz2 | sudo dd of=/dev/<SDCARD> bs=4M
 	```
 
-10. Mount the sdcard, change the pi's hostname in /etc/hostname to something unique and add that name to your config.
-11. Rinse and repeat.
+1. Mount the sdcard, change the pi's hostname in /etc/hostname to something unique and add that name to your config.
+1. Rinse and repeat.
+
+## Wifi Reconnect
+
+WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop by watching i](http://www.raspberrypi.org/phpBB3/viewtopic.php?f=26&t=16054).
+
+1. Create: ~/bin/watch_wifi
+	```
+	#!/bin/bash
+	
+	while [ true ]; do
+			if ifconfig wlan0 | grep -q "inet addr:" ; then
+					sleep 60
+			else
+					ifup --force wlan0
+					sleep 10
+			fi
+	done
+	```
+	
+1. Append to ~/.config/lxsession/LXDE/autostart:
+	
+	```
+	@/home/pi/bin/watch_wifi
+	```
 
 ## The Config
 
