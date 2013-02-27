@@ -65,7 +65,7 @@ When we first started out, we were running Chrome, which displayed a single page
 
 ## Wifi Reconnect
 
-WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop by watching i](http://www.raspberrypi.org/phpBB3/viewtopic.php?f=26&t=16054).
+WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop by watching it](http://www.raspberrypi.org/phpBB3/viewtopic.php?f=26&t=16054).
 
 1. Create: ~/bin/watch_wifi
 	```
