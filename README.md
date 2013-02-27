@@ -67,15 +67,16 @@ When we first started out, we were running Chrome, which displayed a single page
 
 WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop by watching it](http://www.raspberrypi.org/phpBB3/viewtopic.php?f=26&t=16054).
 
-1. Create: ~/bin/watch_wifi
-	```
+1. Assuming you have passwordless sudo (default on raspbian), create: ~/bin/watch_wifi
+	
+	```bash
 	#!/bin/bash
 	
-	while [ true ]; do
-			if ifconfig wlan0 | grep -q "inet addr:" ; then
+	while true ; do
+			if sudo ifconfig wlan0 | grep -q "inet addr:" ; then
 					sleep 60
 			else
-					ifup --force wlan0
+					sudo ifup --force wlan0
 					sleep 10
 			fi
 	done
