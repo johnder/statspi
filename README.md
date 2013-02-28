@@ -28,6 +28,7 @@ When we first started out, we were running Chrome, which displayed a single page
 	```
 
 1. Set the Pi's hostname to something unique on your network and add that name to your config.  For ours, they're simply: pi0 .. piN
+1. Update /etc/hosts: replace raspberrypi with the hostname of your Pi (the pi0 .. piN from above).
 1. Go setup your [configuration (see the Config section)](#the-config).
 1. Disable the Pi's default screensaver, create and chmod u+x this script in ~/bin/disable_screensaver
 
@@ -73,12 +74,13 @@ WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop b
 	#!/bin/bash
 	
 	while true ; do
-			if sudo ifconfig wlan0 | grep -q "inet addr:" ; then
-					sleep 60
-			else
-					sudo ifup --force wlan0
-					sleep 10
-			fi
+		if sudo ifconfig wlan0 | grep -q "inet addr:" ; then
+			sleep 60
+		else
+			sudo ifdown --force wlan0
+			sudo ifup --force wlan0
+			sleep 10
+		fi
 	done
 	```
 	
