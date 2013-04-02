@@ -6,6 +6,10 @@ There are a few options when picking out hosts for your wall of graphite graphs:
 
 When we first started out, we were running Chrome, which displayed a single page with a few graphs on it. As we discovered, Chrome would continually eat up more and more memory, to the point that the OS killed the process, just to display graphs. In an effort to be more light-weight, we tried Midori, and the same thing happened. The crazy part is that we absolutely could not replicate this on any of our other machines, just on the Pis. One late-night coding session later, StatsPi was born, sporting centralized graph-wall config, automatic graph distribution, and a tiny memory footprint that the Pis could handle.
 
+## The Wall
+
+![The Pi Wall](https://raw.github.com/iheartradio/statspi/master/wall.jpg)
+
 ## The Parts
 
 1. 1 TV with a USB port that provides power (preferably 1080p with a 1x1 pixel mode for HDMI in (aka. no overscan)) per Pi
