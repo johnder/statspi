@@ -251,7 +251,7 @@ class StatsPi(object):
 			return g
 
 		host_graphs = []
-		for suite, graphs in CONFIG['graphs'].iteritems():
+		for suite, graphs in sorted(CONFIG['graphs'].items(), key=lambda t: t[0]):
 			for graph in graphs:
 				host_graphs.append(prepare_graph(suite, graph))
 

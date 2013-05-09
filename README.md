@@ -73,10 +73,10 @@ When we first started out, we were running Chrome, which displayed a single page
 WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop by watching it](http://www.raspberrypi.org/phpBB3/viewtopic.php?f=26&t=16054).
 
 1. Assuming you have passwordless sudo (default on raspbian), create: ~/bin/watch_wifi
-	
+
 	```bash
 	#!/bin/bash
-	
+
 	while true ; do
 		if sudo ifconfig wlan0 | grep -q "inet addr:" ; then
 			sleep 60
@@ -87,9 +87,9 @@ WiFi on the Pi can be a bit spotty, so it's best to have it [reconnect on drop b
 		fi
 	done
 	```
-	
+
 1. Append to ~/.config/lxsession/LXDE/autostart:
-	
+
 	```
 	@/home/pi/bin/watch_wifi
 	```
@@ -106,7 +106,7 @@ The config file for StatsPi is essential for keeping everything on your wall up-
 | bgcolor              | The background color to use for the app and graph backgrounds (so they match)
 | hosts                | The hostnames of all Pis running your wall. The first host gets the first chunk of graphs, second gets the second, and so forth.
 | params               | The default parameters that will be used to build graph URLs. [Any normal graphite parameter works.](http://graphite.readthedocs.org/en/latest/render_api.html#graph-parameters)
-| graphs               | The list of graphs, broken down by suite. Each suite is an array of graphs that contains at least a title and an array of targets. Suites are just a logical grouping of graphs, and the suite name is prepended to the title of the graph. Any extra parameter given in a graph config overrides the default parameters in `params`.
+| graphs               | The list of graphs, broken down by suite. Each suite is an array of graphs that contains at least a title and an array of targets. Graphs are organized alphabetically by their suite name (put onto screens in the order of `hosts`), but config order is maintained amongst the graphs in each suite. Suites are just a logical grouping of graphs, and the suite name is prepended to the title of the graph. Any extra parameter given in a graph config overrides the default parameters in `params`.
 
 ```json
 {
@@ -137,24 +137,24 @@ The config file for StatsPi is essential for keeping everything on your wall up-
 		"Suite 1": [
 			{
 				"title": "Hits Per Second",
-				
+
 				"targets": [
 					"my.site.hits_per_second"
 				]
 			},
 			{
 				"title": "Logins Per Second",
-				
+
 				"targets": [
 					"my.site.logins_per_second"
 				]
 			}
 		],
-		
+
 		"Suite 2": [
 			{
 				"title": "Parties Per Second",
-				
+
 				"targets": [
 					"my.site.parties_per_second"
 				]
