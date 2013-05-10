@@ -107,7 +107,7 @@ class Graph(gtk.Image):
 		if width != self.width or height != self.height:
 			self.width = Graph.width = width
 			self.height = Graph.height = height
-			if not self.pixbuf:
+			if self.pixbuf:
 				self._draw()
 
 class StatsPi(object):
