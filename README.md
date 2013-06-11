@@ -104,7 +104,7 @@ The config file for StatsPi is essential for keeping everything on your wall up-
 | configUpdateInterval | How often the configuration file should be polled for changes. Any changes will update the entire wall.
 | graphiteWebRoot      | Where your graphite web app lives (the http://graphite.webapp.com part of http://graphite.webapp.com/render/)
 | bgcolor              | The background color to use for the app and graph backgrounds (so they match)
-| hosts                | The hostnames of all Pis running your wall. The first host gets the first chunk of graphs, second gets the second, and so forth.
+| clusters             | Configuration for all of you statspi clusters. Typically, there is only 1 cluster, and in this case, there is no need to specify which suites should be displayed (by default, all are). If, however, you have multiple teams, and each team wants its own graphs on their local TV, then you can setup multiple clusters, giving each any number of suites. In the example below, there are three clusters: one main cluster will all of the suites, and two small clusters with ONLY the graphs from Suite 1 or Suite 2.
 | params               | The default parameters that will be used to build graph URLs. [Any normal graphite parameter works.](http://graphite.readthedocs.org/en/latest/render_api.html#graph-parameters)
 | graphs               | The list of graphs, broken down by suite. Each suite is an array of graphs that contains at least a title and an array of targets. Graphs are organized alphabetically by their suite name (put onto screens in the order of `hosts`), but config order is maintained amongst the graphs in each suite. Suites are just a logical grouping of graphs, and the suite name is prepended to the title of the graph. Any extra parameter given in a graph config overrides the default parameters in `params`.
 
@@ -114,15 +114,33 @@ The config file for StatsPi is essential for keeping everything on your wall up-
 	"configUpdateInterval": 60,
 	"graphiteWebRoot": "http://url.to.your.graphite.root",
 	"bgcolor": "#333333",
-	"hosts": [
-		"pi0",
-		"pi1",
-		"pi2",
-		"pi3",
-		"pi4",
-		"pi5",
-		"pi6"
-	],
+	"clusters": [
+        {
+            "hosts": [
+                "pi0",
+                "pi1",
+                "pi2",
+                "pi3"
+            ]
+        },
+        {
+            "suites": [
+                "Suite 1"
+            ],
+            "hosts": [
+                "pi4",
+                "pi5"
+            ]
+        },
+        {
+            "suites": [
+                "Suite 2"
+            ],
+            "hosts": [
+                "pi6"
+            ]
+        }
+    ],
 	"params": {
 		"areaAlpha": 0.3,
 		"areaMode": "all",

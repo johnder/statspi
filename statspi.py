@@ -144,22 +144,28 @@ class StatsPi(object):
 			# All of the children of table are cleared and stopped from table's "destroy" event
 			self.win.remove(c)
 
+	def _get_cluster(self, hostname):
+		for c in CONFIG['clusters']:
+			if hostname in c['hosts']:
+				return c
+
 	def _update_graphs(self):
 		hostname = socket.gethostname().lower()
 
 		while True:
 			self._update_config()
+			cluster = self._get_cluster(hostname)
 
-			hosts = [h.lower() for h in CONFIG['hosts']]
-
-			if hostname not in hosts:
+			if not cluster:
 				self.graphs = []
 				gobject.idle_add(self._display_host_error, hostname)
-			else:
-				graphs = self._get_host_graphs(hostname)
-				if self._should_update(graphs):
-					self.graphs = graphs
-					gobject.idle_add(self._display_graphs, graphs)
+
+			hosts = cluster['hosts']
+
+			graphs = self._get_host_graphs(cluster, hostname)
+			if self._should_update(graphs):
+				self.graphs = graphs
+				gobject.idle_add(self._display_graphs, graphs)
 
 			for _ in range(CONFIG.get('configUpdateInterval', 60)):
 				if self._stop:
@@ -240,7 +246,7 @@ class StatsPi(object):
 		self.table.show_all()
 		self.win.show_all()
 
-	def _get_host_graphs(self, hostname):
+	def _get_host_graphs(self, cluster, hostname):
 		""" Loads the graph config and decides which graphs are meant for us.
 		"""
 
@@ -250,13 +256,17 @@ class StatsPi(object):
 			g['title'] = '%s: %s' % (suite, g.get('title', '(no title)'))
 			return g
 
+		suites = sorted(CONFIG['graphs'].items(), key=lambda t: t[0])
+		if 'suites' in cluster:
+			suites = filter(lambda s: s[0] in cluster['suites'], suites)
+
 		host_graphs = []
-		for suite, graphs in sorted(CONFIG['graphs'].items(), key=lambda t: t[0]):
+		for suite, graphs in suites:
 			for graph in graphs:
 				host_graphs.append(prepare_graph(suite, graph))
 
 		# Graphs should be divided equally amongst all hosts
-		hosts = CONFIG['hosts']
+		hosts = cluster['hosts']
 		host_len = len(hosts)
 		per_host = int(math.ceil(len(host_graphs) / float(host_len)))
 
